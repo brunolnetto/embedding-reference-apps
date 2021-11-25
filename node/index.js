@@ -6,9 +6,9 @@ require("dotenv").config;
 const PORT = process.env["PORT"] ? parseInt(process.env["PORT"]) : 3001;
 
 // these should match the settings in your Metabase instance
-let MB_SITE_URL = "http://3.231.180.105:8080";
-let MB_EMBEDDING_SECRET_KEY = "bada589e31ea1d6c11695653952d66ea2d5cb0dde8e37da1970489bc0a4e616e";
-let manager = "Rafael Moreira";
+let MB_SITE_URL = process.env.MB_SITE_URL;
+let MB_EMBEDDING_SECRET_KEY = process.env.MB_EMBEDDING_SECRET_KEY;
+let manager = process.env.MANAGER;
 let MOCK_ID = 42;
 
 
