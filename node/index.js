@@ -1,16 +1,22 @@
 const express = require("express");
 const session = require("express-session");
 const jwt = require("jsonwebtoken");
-require("dotenv").config;
+
+const env_lib = require("dotenv");
+env_lib.config();
 
 const PORT = process.env["PORT"] ? parseInt(process.env["PORT"]) : 3001;
 
+console.log(process.env);
+
 // these should match the settings in your Metabase instance
-let MB_SITE_URL = process.env.MB_SITE_URL;
-let MB_EMBEDDING_SECRET_KEY = process.env.MB_EMBEDDING_SECRET_KEY;
-let manager = process.env.MANAGER;
+let MB_SITE_URL = process.env['MB_SITE_URL'];
+let MB_EMBEDDING_SECRET_KEY = process.env['MB_EMBEDDING_SECRET_KEY'];
+let manager = process.env['MANAGER'];
 let MOCK_ID = 42;
 
+// the dashboard ID of a dashboard that has a `user_id` parameter
+const DASHBOARD_ID = 32;
 
 function checkAuth(req, res, next) {
     const userId = req.session.userId;
@@ -20,9 +26,6 @@ function checkAuth(req, res, next) {
     req.session.redirectTo = req.path;
     return res.redirect('/login');
 }
-
-// the dashboard ID of a dashboard that has a `user_id` parameter
-const DASHBOARD_ID = 2;
 
 if (!MB_EMBEDDING_SECRET_KEY) {
     throw new Error("Please set MB_EMBEDDING_SECRET_KEY.");
@@ -61,20 +64,16 @@ app.get("/logout", (req, res) => {
     res.redirect("/");
 });
 
-// authenticated routes
-
 app.get("/signed_chart", checkAuth, (req, res) => { 
     var payload = {
-                    resource: { question: 136 },
-                    params: {
-                                "gerente": manager
-                            },
-                    exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minute expiration
-                  };
+        resource: { dashboard: DASHBOARD_ID },
+        params: { "gerente": manager},
+        exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minute expiration
+    };
+
     var token = jwt.sign(payload, MB_EMBEDDING_SECRET_KEY);
 
-    var iframeUrl = MB_SITE_URL + "/embed/question/" + token + "#bordered=true&titled=true";
-    console.log(iframeUrl);
+    var iframeUrl = MB_SITE_URL + "/embed/dashboard/" + token + "#bordered=true&titled=true";
     res.render("chart", { userId: MOCK_ID, iframeUrl: iframeUrl });
 })
 
@@ -82,14 +81,15 @@ app.get("/signed_dashboard/:id", checkAuth, (req, res) => {
     const userId = req.session.userId;
     const unsignedToken = {
         resource: { dashboard: DASHBOARD_ID },
-        params: { id: userId },
+        params: { },
         exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minute expiration
     };
     // sign the JWT token with our secret key
     const signedToken = jwt.sign(unsignedToken, MB_EMBEDDING_SECRET_KEY);
+
     // construct the URL of the iframe to be displayed
     const iframeUrl = `${MB_SITE_URL}/embed/dashboard/${signedToken}`;
-    res.render("dashboard", { userId: req.params.id, iframeUrl: iframeUrl });
+    res.render("dashboard", { userId: MOCK_ID, iframeUrl: iframeUrl });
 })
 
 app.get("/signed_public_dashboard/", (req, res) => {
