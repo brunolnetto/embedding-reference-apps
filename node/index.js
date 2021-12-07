@@ -7,8 +7,6 @@ env_lib.config();
 
 const PORT = process.env["PORT"] ? parseInt(process.env["PORT"]) : 3001;
 
-console.log(process.env);
-
 // these should match the settings in your Metabase instance
 let MB_SITE_URL = process.env['MB_SITE_URL'];
 let MB_EMBEDDING_SECRET_KEY = process.env['MB_EMBEDDING_SECRET_KEY'];
